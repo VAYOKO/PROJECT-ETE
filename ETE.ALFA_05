@@ -31,6 +31,21 @@
 #define soil 2
 #define rain 12
 #define Gas A0
+int measurePin = 10;
+int ledPower = 9;
+
+unsigned int samplingTime = 280;
+unsigned int deltaTime = 40;
+unsigned int sleepTime = 9680;
+
+float voMeasured = 0;
+float calcVoltage = 0;
+float dustDensity = 0;
+ int ThermistorPin = 14;
+int Vo;
+float R1 = 10000;
+float logR2, R2, T, Tc, Tf;
+float c1 = 1.009249522e-03, c2 = 2.378405444e-04, c3 = 2.019202697e-07;
 
 int led = 13;
 int ledst = 15;
@@ -46,7 +61,7 @@ Adafruit_SSD1306 display(-1);
 // Bitmap of MarilynMonroe Image
 
 
-WidgetTerminal terminal(V3);
+
 WidgetLED led1(V1);
 WidgetLED led2(V2);
 WidgetLED led3(V3);
@@ -56,11 +71,13 @@ WidgetLED led6(V6);
 WidgetLED led7(V7);
 WidgetLED led8(V8);
 WidgetLED led9(V9);
+void snpm(void);
+void termister(void);
 void gasDetect(void);
 char ssid[] = "A30";
 char pass[] = "ae246532";
 char auth[] = "Tx07n9HuWYokKZTHhaUVge5P-LRyvyQ-";
-
+void screen(void);
   // 'atom', 128x64px
 // 'def', 124x64px
 const unsigned char myBitmap [] PROGMEM = {
@@ -202,10 +219,10 @@ const unsigned char MarilynMonroe [] PROGMEM = {
 
 void setup()
 {
-  
+  Blynk.virtualWrite(V23,Tc);
 pinMode(led,OUTPUT);
 pinMode(ledst,OUTPUT);
-
+ pinMode(ledPower,OUTPUT);
   pinMode(rain, INPUT);
   pinMode(Gas, INPUT);
   pinMode(soil, INPUT);
@@ -241,6 +258,9 @@ display.println("START");
 display.display();
 delay(2000);
  display.clearDisplay();
+ analogWrite(ledPower,1++);
+ delay(1000);
+ analogWrite(ledPower,1--);
 }
 void loop() {
   digitalWrite(LED,HIGH);
@@ -249,34 +269,62 @@ void loop() {
      delay(2000);
   if (Blynk.connected()) {
      Blynk.run();  
-    display.setTextColor(WHITE);
-display.setCursor(0,0);
-display.setTextSize(2);
+    
+ display.setCursor(0,0);
+display.setTextSize(1);
 display.println("ONLINE");
+
+
+ 
+ display.setCursor(0,0);
+display.setTextSize(1);
+display.println("-ONLINE");
 display.display();
 
- display.clearDisplay();
+ display.setCursor(0,9);
+display.setTextSize(1);
+display.println(ssid);
+display.display();
+
+ display.setCursor(0,16);
+display.setTextSize(1);
+display.println(pass);
+display.display();
+
+display.setCursor(0,26);
+display.setTextSize(1);
+display.println("ATOM");
+display.display();
+
+  display.clearDisplay();
+ 
     digitalWrite(ledst,HIGH);
      digitalWrite(led,LOW);
-     
- 
-   
+     snpm();
+ termister();
+   BLYNK_READ(V23);
+    Blynk.virtualWrite(V23,Tc);
+  gasDetect();
+  
+  
  led5.on();
   }
   else{
-    display.setTextColor(WHITE);
-display.setCursor(0,0);
-display.setTextSize(2);
+    display.clearDisplay();
+ display.setCursor(0,0);
+display.setTextSize(1);
 display.println("OFFLINE");
+display.println("NOSIGNAL");
+display.println(".........");
 display.display();
-delay(2000);
- display.clearDisplay();
+display.startscrollright(0x00, 0x00);
     digitalWrite(ledst,LOW);
     digitalWrite(led,HIGH);
     led5.off();
   }
- gasDetect();
-  }
+}
+
+  
 void gasDetect(void) {
   if (analogRead(Gas)>100){
     led4.on();
@@ -308,4 +356,176 @@ void gasDetect(void) {
     }
  
     }
-    
+    void screen(void){
+      display.clearDisplay();
+display.setTextSize(1);
+display.setTextColor(WHITE);
+display.setCursor(0,0);
+
+display.drawRect(0, 0, 110, 30, WHITE);
+display.display();
+delay(2000);
+
+
+    }
+
+void termister(void){
+   
+  Vo = analogRead(ThermistorPin);
+  R2 = R1 * (1023.0 / (float)Vo - 1.0);
+  logR2 = log(R2);
+  T = (1.0 / (c1 + c2*logR2 + c3*logR2*logR2*logR2));
+  Tc = T - 273.15;
+  Tf = (Tc * 9.0)/ 5.0 + 32.0; 
+
+  Serial.print("Temperature: "); 
+  Serial.print(Tf);
+  Serial.print(" F; ");
+  Serial.print(Tc);
+  Serial.println(" C");   
+
+  delay(500);
+  
+}
+
+void snpm(void){
+  digitalWrite(ledPower,LOW);
+  delayMicroseconds(samplingTime);
+
+  voMeasured = analogRead(measurePin);
+
+  delayMicroseconds(deltaTime);
+  digitalWrite(ledPower,HIGH);
+  delayMicroseconds(sleepTime);
+
+  calcVoltage = voMeasured*(5.0/1024);
+  dustDensity = 0.17*calcVoltage-0.1;
+
+  if ( dustDensity < 0)
+  {
+    dustDensity = 0.00;
+  }
+
+  Serial.println("Raw Signal Value (0-1023):");
+  Serial.println(voMeasured);
+
+  Serial.println("Voltage:");
+  Serial.println(calcVoltage);
+
+  Serial.println("Dust Density:");
+  Serial.println(dustDensity);
+
+  delay(1000);
+  Blynk.virtualWrite(V10,calcVoltage);
+Blynk.virtualWrite(V11,dustDensity);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*
+    int ThermistorPin = 0;
+int Vo;
+float R1 = 10000;
+float logR2, R2, T, Tc, Tf;
+float c1 = 1.009249522e-03, c2 = 2.378405444e-04, c3 = 2.019202697e-07;
+
+void setup() {
+Serial.begin(9600);
+}
+
+void loop() {
+
+  Vo = analogRead(ThermistorPin);
+  R2 = R1 * (1023.0 / (float)Vo - 1.0);
+  logR2 = log(R2);
+  T = (1.0 / (c1 + c2*logR2 + c3*logR2*logR2*logR2));
+  Tc = T - 273.15;
+  Tf = (Tc * 9.0)/ 5.0 + 32.0; 
+
+  Serial.print("Temperature: "); 
+  Serial.print(Tf);
+  Serial.print(" F; ");
+  Serial.print(Tc);
+  Serial.println(" C");   
+
+  delay(500);
+}
+*/
+
+
+
+
+/*
+
+int measurePin = A5;
+int ledPower = 12;
+
+unsigned int samplingTime = 280;
+unsigned int deltaTime = 40;
+unsigned int sleepTime = 9680;
+
+float voMeasured = 0;
+float calcVoltage = 0;
+float dustDensity = 0;
+
+void setup(){
+  Serial.begin(9600);
+  pinMode(ledPower,OUTPUT);
+}
+
+void loop(){
+  digitalWrite(ledPower,LOW);
+  delayMicroseconds(samplingTime);
+
+  voMeasured = analogRead(measurePin);
+
+  delayMicroseconds(deltaTime);
+  digitalWrite(ledPower,HIGH);
+  delayMicroseconds(sleepTime);
+
+  calcVoltage = voMeasured*(5.0/1024);
+  dustDensity = 0.17*calcVoltage-0.1;
+
+  if ( dustDensity < 0)
+  {
+    dustDensity = 0.00;
+  }
+
+  Serial.println("Raw Signal Value (0-1023):");
+  Serial.println(voMeasured);
+
+  Serial.println("Voltage:");
+  Serial.println(calcVoltage);
+
+  Serial.println("Dust Density:");
+  Serial.println(dustDensity);
+
+  delay(1000);
+}
+*/
