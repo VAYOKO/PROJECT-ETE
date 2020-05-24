@@ -1,0 +1,203 @@
+/*
+ * codeE.T.E ALFA02 อัพเดท
+ * 
+ * 1จอOLED
+ * 2ไฟstatus
+ * GPIO0 D3 FLASH
+ * GPIO1 TX TXD0
+ * GPIO2 D4
+ * GPIO3 RX RXD0
+ * GPIO4 D2 TXD1
+ * GPIO5 D1
+ * GPIO6
+ * GPIO7
+ * GPIO8
+ * GPIO9 SDD2
+ * GPTO10 SDD3
+ * GPIO11
+ * GPIO12 D6 HMOSI
+ * GPIO13 D7 RXD2 HMISO
+ * GPIO14 D5 HSCLK
+ * GPIO15 D8 
+ * GPIO16  USER WAKE
+ */
+#define BLYNK_PRINT Serial
+#include <ESP8266WiFi.h>
+#include <BlynkSimpleEsp8266.h>
+
+#define EEPROM_STATE_ADDRESS_1 128
+#define EEPROM_STATE_ADDRESS_2 144
+
+
+int rain = 12;
+int Gas = A0;
+int measurePin = 10;
+int led = 9;
+
+int soil =13;
+unsigned int samplingTime = 280;
+unsigned int deltaTime = 40;
+unsigned int sleepTime = 9680;
+ void info1(void);
+float voMeasured = 0;
+float calcVoltage = 0;
+float dustDensity = 0;
+ int ldr = 14;
+
+
+
+int ledst = 15;
+int LED = 0;
+
+#include <SPI.h>
+#include <Wire.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
+static unsigned long time4 = millis();
+Adafruit_SSD1306 display(-1);
+
+// Bitmap of MarilynMonroe Image
+
+
+
+WidgetLED led1(V1);
+WidgetLED led2(V2);
+WidgetLED led3(V3);
+WidgetLED led4(V4);
+WidgetLED led5(V5);
+WidgetLED led6(V6);
+WidgetLED led7(V7);
+WidgetLED led8(V8);
+WidgetLED led9(V9);
+
+void gasDetect(void);
+char ssid[] = "aisfibre";
+char pass[] = "s0897773889";
+char auth[] = "Tx07n9HuWYokKZTHhaUVge5P-LRyvyQ-";
+
+  // 'atom', 128x64px
+// 'def', 124x64px
+
+
+
+void setup()
+{
+
+pinMode(led,OUTPUT);
+pinMode(ledst,OUTPUT);
+pinMode(ldr,INPUT);
+  pinMode(rain, INPUT);
+  pinMode(Gas, INPUT);
+  pinMode(soil, INPUT);
+
+  Blynk.begin(auth, ssid, pass);
+
+  display.begin(SSD1306_SWITCHCAPVCC, 0x3C);  
+display.begin(SSD1306_SWITCHCAPVCC, 0x3C);  
+
+  // Clear the buffer.
+  
+}
+
+void loop() {
+  info1();
+static unsigned long time1 = millis();
+  static unsigned long time2 = millis();
+    if((millis()-time1)>5000){
+    time1 = millis();
+   
+        led8.on();
+      
+    digitalWrite(led,HIGH);
+  }
+    else{  if((millis()-time2)>400){
+    time2 = millis();
+   
+      digitalWrite(led,LOW);
+    led8.off();  }
+  }
+  if (Blynk.connected()) {
+     Blynk.run();  
+
+
+ 
+
+
+   BLYNK_READ(V23);
+  
+  gasDetect();
+  
+  
+ led5.on();
+  }
+  else{
+ 
+    digitalWrite(led,HIGH);
+    led5.off();
+  }
+}
+
+  
+void gasDetect(void) {
+  static unsigned long time3 = millis();
+  
+      if((millis()-time3)>500){
+    time3 = millis();
+  if (analogRead(Gas)>100){
+ 
+       led4.on();
+
+    Serial.println("GAS, GAS, GAS");
+      
+  }
+  else{
+    led4.off();
+  }
+}
+}
+
+    void soilrain(void){
+      if((digitalRead(soil)==HIGH&&digitalRead(rain)==HIGH)){
+      led7.on();
+      led9.off();
+      led6.off();
+      
+    }
+    else if(( digitalRead(soil)==HIGH&&digitalRead(rain)==LOW)){
+       led6.on();
+       led9.off();
+       led7.off();
+    }
+    else  if((digitalRead(soil)==LOW&&digitalRead(rain)==HIGH)){
+      led9.on();
+      led6.off();
+      led7.off();
+    }
+ 
+    }
+   void info1(void){
+   static unsigned long time3 = millis();
+      if((millis()-time3)>5000){
+    time3 = millis();
+    Blynk.virtualWrite(V30,Gas);
+     Blynk.virtualWrite(V30,ldr,"ldr");
+     if (Blynk.connected()) {
+     Blynk.virtualWrite(V30,"connected");
+}
+}
+   }
+
+void ldr1(void){
+  
+
+int ldrval = 0;
+   static unsigned long time4 = millis();
+   if((millis()-time4)>500){
+    time4 = millis();
+ldrval = analogRead(ldr); // read the value from the LDR
+  Serial.println(ldr);      // print the value to the serial port
+ 
+ Blynk.virtualWrite(V29,ldr);
+}
+   
+}
