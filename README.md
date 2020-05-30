@@ -8,3 +8,5 @@ http://moveonplus.com/varis/index.html#services6-9
 ขนาด วงจรเบตเตอรี่ เเละวงจรชาร์จ เเละป้องกันรัดวงจร ขนาด 6.65 cm * 4 cm
 ขนาดวงจร stepdown สำหรับชาร์จ ขนาด 4 cm * 6.9 cm
 ขนาดวงจร stepdown สำหรับเป็น power supply ขนาด 6.1 cm * 2.09 cm
+
+ 
