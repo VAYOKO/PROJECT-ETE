@@ -10,3 +10,4 @@ http://moveonplus.com/varis/index.html#services6-9
 ขนาดวงจร stepdown สำหรับเป็น power supply ขนาด 6.1 cm * 2.09 cm
 
  
+หลักการทำงาน Arduino จะประมวลผลเเละเก็บข้อมูลต่างๆจากเซนเซอร์ไปยังโมดูล sd card โดยมีระบบเเบตเตอรี่โซลาเซลล์
